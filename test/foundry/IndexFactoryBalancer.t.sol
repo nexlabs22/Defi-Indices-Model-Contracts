@@ -699,22 +699,7 @@ contract IndexFactoryBalancerTest is Test, IndexFactoryBalancer {
         assertEq(result, "HelloWorld", "Concatenation function failed");
     }
 
-    function testPriceInWei() public {
-        vm.mockCall(
-            address(indexFactoryStorage.toUsdPriceFeed()),
-            abi.encodeWithSelector(AggregatorV3Interface.latestRoundData.selector),
-            abi.encode(uint80(0), int256(123456789000000000), uint256(0), uint256(0), uint80(0))
-        );
-
-        vm.mockCall(
-            address(indexFactoryStorage.toUsdPriceFeed()),
-            abi.encodeWithSelector(AggregatorV3Interface.decimals.selector),
-            abi.encode(uint8(8))
-        );
-
-        uint256 price = indexFactoryStorage.priceInWei();
-        assertTrue(price > 0, "priceInWei should return a positive value");
-    }
+    
 
     function testGetPortfolioBalance_Empty() public {
         vm.mockCall(address(indexFactoryStorage), bytes4(keccak256("totalCurrentList()")), abi.encode(uint256(0)));

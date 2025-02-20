@@ -273,7 +273,16 @@ contract IndexFactoryStorage is
      * @return The price in Wei.
      */
     function priceInWei() public view returns (uint256) {
-        (, int256 price,,,) = toUsdPriceFeed.latestRoundData();
+        // (, int256 price,,,) = toUsdPriceFeed.latestRoundData();
+        // uint8 priceFeedDecimals = toUsdPriceFeed.decimals();
+        // price = _toWei(price, priceFeedDecimals, 18);
+        // return uint256(price);
+        (uint80 roundId,int price,,uint256 _updatedAt,) = toUsdPriceFeed.latestRoundData();
+        require(roundId != 0, "invalid round id");
+        require(_updatedAt != 0 && _updatedAt <= block.timestamp, "invalid updated time");
+        require(price > 0, "invalid price");
+        require(block.timestamp - _updatedAt < 1 days, "invalid updated time");
+
         uint8 priceFeedDecimals = toUsdPriceFeed.decimals();
         price = _toWei(price, priceFeedDecimals, 18);
         return uint256(price);

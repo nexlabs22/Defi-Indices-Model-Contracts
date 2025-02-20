@@ -350,7 +350,7 @@ contract IndexFactoryStorageTest is Test, IndexFactoryStorage {
         vm.mockCall(
             address(indexFactoryStorage.toUsdPriceFeed()),
             abi.encodeWithSelector(AggregatorV3Interface.latestRoundData.selector),
-            abi.encode(0, price, 0, 0, 0)
+            abi.encode(1, price, 0, 1, 0)
         );
 
         vm.mockCall(
