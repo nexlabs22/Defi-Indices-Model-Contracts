@@ -31,23 +31,26 @@ contract OnchainTest is Script {
         issuanceAndRedemptionWithEth();
 
         // Issuance with ERC20 Token
-        issuanceAndRedemptionWithUsdt();
+        // issuanceAndRedemptionWithUsdt();
 
         vm.stopBroadcast();
     }
 
     function issuanceAndRedemptionWithEth() public {
-        IndexFactory(payable(indexFactoryProxy)).issuanceIndexTokensWithEth{value: (1e14 * 1001) / 1000}(1e14);
-
-        address[] memory path = new address[](2);
-        path[0] = weth;
-        path[1] = usdt;
-        uint24[] memory fees = new uint24[](1);
-        fees[0] = 3000;
-
-        IndexFactory(payable(indexFactoryProxy)).redemption(
-            indexToken.balanceOf(address(user)), address(weth), path, fees
+        IndexFactory(payable(indexFactoryProxy)).issuanceIndexTokensWithEth{value: (730000000000000 * 1001) / 1000}(
+            730000000000000
         );
+        // IndexFactory(payable(indexFactoryProxy)).issuanceIndexTokensWithEth{value: (1e14 * 1001) / 1000}(1e14);
+
+        // address[] memory path = new address[](2);
+        // path[0] = weth;
+        // path[1] = usdt;
+        // uint24[] memory fees = new uint24[](1);
+        // fees[0] = 3000;
+
+        // IndexFactory(payable(indexFactoryProxy)).redemption(
+        //     indexToken.balanceOf(address(user)), address(weth), path, fees
+        // );
     }
 
     function issuanceAndRedemptionWithUsdt() public {

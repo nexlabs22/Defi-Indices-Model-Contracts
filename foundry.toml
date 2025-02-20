@@ -10,7 +10,7 @@ script = 'scripts'
 auto_detect_solc = true
 # via_ir = true
 # optimizer = true
-# optimize_runs = 200
+# optimize_runs = 100
 
 
 # remappings = ["@openzeppelin=node_modules/@openzeppelin/"]

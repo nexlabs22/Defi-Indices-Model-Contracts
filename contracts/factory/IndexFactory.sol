@@ -133,7 +133,7 @@ contract IndexFactory is
             amountToMint = newTotalSupply - totalSupply;
         } else {
             uint256 price = factoryStorage.priceInWei();
-            amountToMint = (_wethAmount * price) / 1e16;
+            amountToMint = (_secondPortfolioValue * price) / 100e18;
         }
         indexToken.mint(msg.sender, amountToMint);
     }
