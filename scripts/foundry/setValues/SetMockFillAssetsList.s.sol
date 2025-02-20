@@ -39,11 +39,11 @@ contract SetMockFillAssetsList is Script {
         assetList[4] = 0xfc5A1A6EB076a2C7aD06eD22C90d7E710E35ad0a; // GMX
 
         uint256[] memory marketShares = new uint256[](5);
-        marketShares[0] = 280000000000000000; // 28
-        marketShares[1] = 230000000000000000; // 23
-        marketShares[2] = 180000000000000000; // 18
-        marketShares[3] = 180000000000000000; // 18
-        marketShares[4] = 130000000000000000; // 13
+        marketShares[0] = 28000000000000000000; // 28
+        marketShares[1] = 23000000000000000000; // 23
+        marketShares[2] = 18000000000000000000; // 18
+        marketShares[3] = 18000000000000000000; // 18
+        marketShares[4] = 13000000000000000000; // 13
 
         uint24[] memory feesData = new uint24[](1);
         feesData[0] = 3000;

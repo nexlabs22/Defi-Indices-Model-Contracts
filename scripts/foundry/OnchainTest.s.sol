@@ -1,6 +1,3 @@
-// SPDX-License-Identifier: MIT
-pragma solidity ^0.8.20;
-
 import {Script} from "forge-std/Script.sol";
 import {console} from "forge-std/console.sol";
 import {IndexFactory} from "../../contracts/factory/IndexFactory.sol";
@@ -14,7 +11,7 @@ contract OnchainTest is Script {
     // Mainnet
     address user = vm.envAddress("USER");
     address weth = vm.envAddress("ARBITRUM_WETH_ADDRESS");
-    address usdt = vm.envAddress("SEPOLIA_USDC_ADDRESS");
+    address usdt = vm.envAddress("ARBITRUM_USDC_ADDRESS");
     address indexFactoryProxy = vm.envAddress("ARBITRUM_INDEX_FACTORY_PROXY_ADDRESS");
     address indexTokenProxy = vm.envAddress("ARBITRUM_INDEX_TOKEN_PROXY_ADDRESS");
 
