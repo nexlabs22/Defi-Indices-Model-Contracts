@@ -4,6 +4,8 @@ pragma solidity ^0.8.7;
 import "forge-std/Test.sol";
 import "../../contracts/factory/IndexFactoryStorage.sol";
 import "./OlympixUnitTest.sol";
+import {ERC1967Proxy} from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
+
 
 contract IndexFactoryStorageTest is Test, IndexFactoryStorage {
     IndexFactoryStorage indexFactoryStorage;
@@ -12,21 +14,43 @@ contract IndexFactoryStorageTest is Test, IndexFactoryStorage {
     address factoryBalancer = address(3);
 
     function setUp() external {
-        indexFactoryStorage = new IndexFactoryStorage();
-        indexFactoryStorage.initialize(
-            payable(address(0x1)),
-            address(0x3),
-            bytes32(0),
-            address(0x4),
-            address(0x5),
-            address(0x6),
-            address(0x7),
-            address(0x8),
-            address(0x9),
-            address(0x10)
-        );
+        // indexFactoryStorage = new IndexFactoryStorage();
+        // indexFactoryStorage.initialize(
+        //     payable(address(0x1)),
+        //     address(0x3),
+        //     bytes32(0),
+        //     address(0x4),
+        //     address(0x5),
+        //     address(0x6),
+        //     address(0x7),
+        //     address(0x8),
+        //     address(0x9),
+        //     address(0x10)
+        // );
 
-        
+        IndexFactoryStorage indexFactoryStorageImp = new IndexFactoryStorage();
+        indexFactoryStorage = IndexFactoryStorage(
+            payable(
+                address(
+                    new ERC1967Proxy(
+                        address(indexFactoryStorageImp),
+                        abi.encodeWithSelector(
+                            indexFactoryStorageImp.initialize.selector,
+                            payable(address(0x1)),
+                            address(0x3),
+                            bytes32(0),
+                            address(0x4),
+                            address(0x5),
+                            address(0x6),
+                            address(0x7),
+                            address(0x8),
+                            address(0x9),
+                            address(0x10)
+                        )
+                    )
+                )
+            )
+        );
     }
 
     function testToWeiMutations() public {
@@ -34,18 +58,21 @@ contract IndexFactoryStorageTest is Test, IndexFactoryStorage {
         uint8 amountDecimals = 8;
         uint8 chainDecimals = 18;
 
-        int256 expected = amount * int256(10 ** uint256(chainDecimals - amountDecimals));
+        int256 expected = amount *
+            int256(10 ** uint256(chainDecimals - amountDecimals));
 
         int256 result = _toWei(amount, amountDecimals, chainDecimals);
         assertEq(result, expected, "Original logic failed for valid input");
 
-        int256 mutatedDivision = amount / int256(10 ** uint256(chainDecimals - amountDecimals));
+        int256 mutatedDivision = amount /
+            int256(10 ** uint256(chainDecimals - amountDecimals));
         assertTrue(
             mutatedDivision != expected,
             "Mutation not killed: replaced multiply with divide (chainDecimals > amountDecimals)"
         );
 
-        int256 mutatedMultiplication = amount * int256(10 * uint256(chainDecimals - amountDecimals));
+        int256 mutatedMultiplication = amount *
+            int256(10 * uint256(chainDecimals - amountDecimals));
         assertTrue(
             mutatedMultiplication != expected,
             "Mutation not killed: replaced exponentiation with multiplication (chainDecimals > amountDecimals)"
@@ -53,19 +80,25 @@ contract IndexFactoryStorageTest is Test, IndexFactoryStorage {
 
         uint8 swappedAmountDecimals = 18;
         uint8 swappedChainDecimals = 8;
-        int256 expectedSwapped = amount * int256(10 ** uint256(swappedAmountDecimals - swappedChainDecimals));
+        int256 expectedSwapped = amount *
+            int256(10 ** uint256(swappedAmountDecimals - swappedChainDecimals));
 
         result = _toWei(amount, swappedAmountDecimals, swappedChainDecimals);
-        assertEq(result, expectedSwapped, "Original logic failed for swapped decimals");
+        assertEq(
+            result,
+            expectedSwapped,
+            "Original logic failed for swapped decimals"
+        );
 
-        int256 mutatedDivisionSwapped = amount / int256(10 ** uint256(swappedAmountDecimals - swappedChainDecimals));
+        int256 mutatedDivisionSwapped = amount /
+            int256(10 ** uint256(swappedAmountDecimals - swappedChainDecimals));
         assertTrue(
             mutatedDivisionSwapped != expectedSwapped,
             "Mutation not killed: replaced multiply with divide (amountDecimals > chainDecimals)"
         );
 
-        int256 mutatedMultiplicationSwapped =
-            amount * int256(10 * uint256(swappedAmountDecimals - swappedChainDecimals));
+        int256 mutatedMultiplicationSwapped = amount *
+            int256(10 * uint256(swappedAmountDecimals - swappedChainDecimals));
         assertTrue(
             mutatedMultiplicationSwapped != expectedSwapped,
             "Mutation not killed: replaced exponentiation with multiplication (amountDecimals > chainDecimals)"
@@ -102,7 +135,9 @@ contract IndexFactoryStorageTest is Test, IndexFactoryStorage {
         );
         vm.mockCall(
             address(indexFactoryStorage),
-            abi.encodeWithSelector(indexFactoryStorage.totalCurrentList.selector),
+            abi.encodeWithSelector(
+                indexFactoryStorage.totalCurrentList.selector
+            ),
             abi.encode(1)
         );
 
@@ -110,8 +145,6 @@ contract IndexFactoryStorageTest is Test, IndexFactoryStorage {
         assertEq(total, 1, "Expected totalCurrentList to be 1");
 
         vm.startPrank(indexFactoryStorage.priceOracle());
-
-        
 
         vm.stopPrank();
     }
@@ -123,28 +156,72 @@ contract IndexFactoryStorageTest is Test, IndexFactoryStorage {
             uint8 chainDec = 18;
             int256 expected1 = amount * int256(10 ** (chainDec - amountDec));
             int256 actual1 = _toWei(amount, amountDec, chainDec);
-            assertEq(actual1, expected1, "test_MutationCoverage: _toWei failed for chainDecimals > amountDecimals");
+            assertEq(
+                actual1,
+                expected1,
+                "test_MutationCoverage: _toWei failed for chainDecimals > amountDecimals"
+            );
 
             uint8 bigger = 18;
             uint8 smaller = 8;
             int256 expected2 = amount * int256(10 ** (bigger - smaller));
             int256 actual2 = _toWei(amount, bigger, smaller);
-            assertEq(actual2, expected2, "test_MutationCoverage: _toWei failed for chainDecimals < amountDecimals");
+            assertEq(
+                actual2,
+                expected2,
+                "test_MutationCoverage: _toWei failed for chainDecimals < amountDecimals"
+            );
         }
     }
 
     function testInitializeSetsParametersCorrectly() public {
-        assertEq(address(indexFactoryStorage.indexToken()), address(0x1), "IndexToken address mismatch");
-        assertEq(address(indexFactoryStorage.toUsdPriceFeed()), address(0x4), "Price feed address mismatch");
-        assertEq(address(indexFactoryStorage.weth()), address(0x5), "WETH address mismatch");
-        assertEq(address(indexFactoryStorage.quoter()), address(0x6), "Quoter address mismatch");
-        assertEq(address(indexFactoryStorage.swapRouterV3()), address(0x7), "SwapRouterV3 address mismatch");
-        assertEq(address(indexFactoryStorage.factoryV3()), address(0x8), "FactoryV3 address mismatch");
-        assertEq(address(indexFactoryStorage.swapRouterV2()), address(0x9), "SwapRouterV2 address mismatch");
-        assertEq(address(indexFactoryStorage.factoryV2()), address(0x10), "FactoryV2 address mismatch");
+        assertEq(
+            address(indexFactoryStorage.indexToken()),
+            address(0x1),
+            "IndexToken address mismatch"
+        );
+        assertEq(
+            address(indexFactoryStorage.toUsdPriceFeed()),
+            address(0x4),
+            "Price feed address mismatch"
+        );
+        assertEq(
+            address(indexFactoryStorage.weth()),
+            address(0x5),
+            "WETH address mismatch"
+        );
+        assertEq(
+            address(indexFactoryStorage.quoter()),
+            address(0x6),
+            "Quoter address mismatch"
+        );
+        assertEq(
+            address(indexFactoryStorage.swapRouterV3()),
+            address(0x7),
+            "SwapRouterV3 address mismatch"
+        );
+        assertEq(
+            address(indexFactoryStorage.factoryV3()),
+            address(0x8),
+            "FactoryV3 address mismatch"
+        );
+        assertEq(
+            address(indexFactoryStorage.swapRouterV2()),
+            address(0x9),
+            "SwapRouterV2 address mismatch"
+        );
+        assertEq(
+            address(indexFactoryStorage.factoryV2()),
+            address(0x10),
+            "FactoryV2 address mismatch"
+        );
 
         assertEq(indexFactoryStorage.feeRate(), 10, "Fee rate mismatch");
-        assertEq(indexFactoryStorage.feeReceiver(), address(this), "Fee receiver mismatch");
+        assertEq(
+            indexFactoryStorage.feeReceiver(),
+            address(this),
+            "Fee receiver mismatch"
+        );
     }
 
     function testInitializeRevertsWhenCalledTwice() public {
@@ -181,7 +258,10 @@ contract IndexFactoryStorageTest is Test, IndexFactoryStorage {
         address newFactoryBalancerAddress = address(0x123);
         vm.prank(indexFactoryStorage.owner());
         indexFactoryStorage.setFactoryBalancer(newFactoryBalancerAddress);
-        assertEq(indexFactoryStorage.factoryBalancerAddress(), newFactoryBalancerAddress);
+        assertEq(
+            indexFactoryStorage.factoryBalancerAddress(),
+            newFactoryBalancerAddress
+        );
     }
 
     function testSetFactoryBalancerRevertWithNonOwnerAddress() public {
@@ -261,8 +341,16 @@ contract IndexFactoryStorageTest is Test, IndexFactoryStorage {
 
         indexFactoryStorage.setFeeRate(newFee);
 
-        assertEq(indexFactoryStorage.feeRate(), newFee, "Fee rate was not updated correctly");
-        assertEq(indexFactoryStorage.latestFeeUpdate(), block.timestamp, "Latest fee update timestamp not updated");
+        assertEq(
+            indexFactoryStorage.feeRate(),
+            newFee,
+            "Fee rate was not updated correctly"
+        );
+        assertEq(
+            indexFactoryStorage.latestFeeUpdate(),
+            block.timestamp,
+            "Latest fee update timestamp not updated"
+        );
     }
 
     function testSetFeeRateRevertsIfTooSoon() public {
@@ -270,7 +358,9 @@ contract IndexFactoryStorageTest is Test, IndexFactoryStorage {
 
         vm.warp(block.timestamp + 10 hours);
 
-        vm.expectRevert("You should wait at least 12 hours after the latest update");
+        vm.expectRevert(
+            "You should wait at least 12 hours after the latest update"
+        );
         indexFactoryStorage.setFeeRate(newFee);
     }
 
@@ -349,7 +439,9 @@ contract IndexFactoryStorageTest is Test, IndexFactoryStorage {
 
         vm.mockCall(
             address(indexFactoryStorage.toUsdPriceFeed()),
-            abi.encodeWithSelector(AggregatorV3Interface.latestRoundData.selector),
+            abi.encodeWithSelector(
+                AggregatorV3Interface.latestRoundData.selector
+            ),
             abi.encode(1, price, 0, 1, 0)
         );
 
@@ -366,7 +458,9 @@ contract IndexFactoryStorageTest is Test, IndexFactoryStorage {
     }
 
     function test_setFeeRate_FailWhenLatestFeeUpdateIsLessThan12Hours() public {
-        vm.expectRevert("You should wait at least 12 hours after the latest update");
+        vm.expectRevert(
+            "You should wait at least 12 hours after the latest update"
+        );
         indexFactoryStorage.setFeeRate(50);
     }
 
@@ -533,7 +627,12 @@ contract IndexFactoryStorageTest is Test, IndexFactoryStorage {
         vm.mockCall(
             priceOracle,
             abi.encodeWithSelector(
-                IPriceOracle.estimateAmountOut.selector, factoryV3, tokenIn, tokenOut, uint128(amountIn), swapFee
+                IPriceOracle.estimateAmountOut.selector,
+                factoryV3,
+                tokenIn,
+                tokenOut,
+                uint128(amountIn),
+                swapFee
             ),
             abi.encode(2 ether)
         );
@@ -560,24 +659,39 @@ contract IndexFactoryStorageTest is Test, IndexFactoryStorage {
         uint8 amountDecimals = 8;
         uint8 chainDecimals = 18;
 
-        int256 expected = amount * int256(10 ** (chainDecimals - amountDecimals));
+        int256 expected = amount *
+            int256(10 ** (chainDecimals - amountDecimals));
 
         {
             uint8 mutatedChainDecimals = 8;
-            int256 mutatedResult = _toWei(amount, amountDecimals, mutatedChainDecimals);
-            assertFalse(mutatedResult == expected, "Mutation not killed: _chainDecimals < _amountDecimals");
+            int256 mutatedResult = _toWei(
+                amount,
+                amountDecimals,
+                mutatedChainDecimals
+            );
+            assertFalse(
+                mutatedResult == expected,
+                "Mutation not killed: _chainDecimals < _amountDecimals"
+            );
         }
 
         {
             uint256 mutatedMultiplier = 10 * (chainDecimals - amountDecimals);
             int256 mutatedResult = amount * int256(mutatedMultiplier);
             int256 result = _toWei(amount, amountDecimals, chainDecimals);
-            assertFalse(mutatedResult == result, "Mutation not killed: 10 * (_chainDecimals - _amountDecimals)");
+            assertFalse(
+                mutatedResult == result,
+                "Mutation not killed: 10 * (_chainDecimals - _amountDecimals)"
+            );
         }
 
         {
-            int256 mutatedResult =
-                amount / int256(10 / (int256(uint256(chainDecimals)) - int256(uint256(amountDecimals))));
+            int256 mutatedResult = amount /
+                int256(
+                    10 /
+                        (int256(uint256(chainDecimals)) -
+                            int256(uint256(amountDecimals)))
+                );
             int256 result = _toWei(amount, amountDecimals, chainDecimals);
             assertFalse(
                 mutatedResult == result,
@@ -587,9 +701,13 @@ contract IndexFactoryStorageTest is Test, IndexFactoryStorage {
 
         {
             uint8 mutatedChainDecimals = chainDecimals + amountDecimals;
-            int256 mutatedResult = amount * int256(10 ** uint256(mutatedChainDecimals));
+            int256 mutatedResult = amount *
+                int256(10 ** uint256(mutatedChainDecimals));
             int256 result = _toWei(amount, amountDecimals, chainDecimals);
-            assertFalse(mutatedResult == result, "Mutation not killed: _chainDecimals + _amountDecimals");
+            assertFalse(
+                mutatedResult == result,
+                "Mutation not killed: _chainDecimals + _amountDecimals"
+            );
         }
 
         int256 actual = _toWei(amount, amountDecimals, chainDecimals);

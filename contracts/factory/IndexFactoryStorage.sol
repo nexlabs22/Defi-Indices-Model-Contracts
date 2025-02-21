@@ -153,6 +153,11 @@ contract IndexFactoryStorage is
         feeReceiver = msg.sender;
     }
 
+    /// @custom:oz-upgrades-unsafe-allow constructor
+    constructor() {
+        _disableInitializers();
+    }
+
     function setFactory(address _factoryAddress) public onlyOwner {
         factoryAddress = _factoryAddress;
     }

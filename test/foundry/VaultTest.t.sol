@@ -7,6 +7,7 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "../../contracts/vault/Vault.sol";
 import "./OlympixUnitTest.sol";
 import "../mocks/MockERC20.sol";
+import {ERC1967Proxy} from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
 
 contract VaultTest is Test {
     Vault vault;
@@ -15,8 +16,19 @@ contract VaultTest is Test {
     event FundsWithdrawn(address token, address to, uint256 amount);
 
     function setUp() external {
-        vault = new Vault();
-        vault.initialize();
+        // vault = new Vault();
+        // vault.initialize();
+        Vault vaultImpl = new Vault();
+        vault = Vault(
+            payable(
+                address(
+                    new ERC1967Proxy(
+                        address(vaultImpl),
+                        abi.encodeCall(Vault.initialize, ())
+                    )
+                )
+            )
+        );
         token = new MockERC20("Test", "TST");
         token.mint(address(this), 10000e18);
     }

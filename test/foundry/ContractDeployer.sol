@@ -43,31 +43,8 @@ contract ContractDeployer is
 {
     bytes32 jobId = "6b88e0402e5d415eb946e528b8e0c7ba";
 
-    address public constant WETH9 = 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2;
     address public constant QUOTER = 0xb27308f9F90D607463bb33eA1BeBb41C27CE5AB6;
-
-    address public constant DAI = 0x6B175474E89094C44Da98b954EedeAC495271d0F;
-
-    address public SHIB = 0x95aD61b0a150d79219dCF64E1E6Cc01f0B64C4cE;
-    address public constant PEPE = 0x6982508145454Ce325dDbE47a25d4ec3d2311933;
-    address public constant FLOKI = 0xcf0C122c6b73ff809C693DB761e7BaeBe62b6a2E;
-    address public constant MEME = 0xb131f4A55907B10d1F0A50d8ab8FA09EC342cd74;
-    address public constant BabyDoge =
-        0xAC57De9C1A09FeC648E93EB98875B212DB0d460B;
-    address public constant BONE = 0x9813037ee2218799597d83D4a5B6F3b6778218d9;
-    address public constant HarryPotterObamaSonic10Inu =
-        0x72e4f9F808C49A2a61dE9C5896298920Dc4EEEa9;
-    address public constant ELON = 0x761D38e5ddf6ccf6Cf7c55759d5210750B5D60F3;
-    address public constant WSM = 0xB62E45c3Df611dcE236A6Ddc7A493d79F9DFadEf;
-    address public constant LEASH = 0x27C70Cd1946795B66be9d954418546998b546634;
-
-    address public constant WBTC = 0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599;
-    address public constant BNB = 0x418D75f65a02b3D53B2418FB8E1fe493759c7605;
-    address public constant WXRP = 0x1E02E2eD139F5Baf6bfaD04c0E61EBb0110dA653;
-    address public constant CURVE = 0xD533a949740bb3306d119CC777fa900bA034cd52;
-    address public constant LINK = 0x514910771AF9Ca656af840dff83E8264EcF986CA;
-    address public constant UNI = 0x1f9840a85d5aF5bf1D1762F925BDADdC4201F984;
-
+    
     address feeReceiver = vm.addr(1);
     address newFeeReceiver = vm.addr(2);
     address minter = vm.addr(3);
@@ -153,7 +130,7 @@ contract ContractDeployer is
             MockApiOracle,
             IndexToken,
             MockV3Aggregator,
-            IndexFactory,
+            // IndexFactory,
             IndexFactoryStorage,
             Vault
         )
@@ -167,41 +144,83 @@ contract ContractDeployer is
             2000e18 //initial data
         );
 
-        dai = ERC20(DAI);
-        quoter = IQuoter(QUOTER);
-
-        IndexToken indexToken = new IndexToken();
-        indexToken.initialize(
-            "Anti Inflation",
-            "ANFI",
-            1e18,
-            feeReceiver,
-            1000000000e18
+        
+        IndexToken indexTokenImpl = new IndexToken();
+        IndexToken indexToken = IndexToken(
+            payable(
+                address(
+                    new ERC1967Proxy(
+                        address(indexTokenImpl),
+                        abi.encodeCall(
+                            IndexToken.initialize,
+                            ("Anti Inflation",
+                            "ANFI",
+                            1e18,
+                            feeReceiver,
+                            1000000000e18)
+                        )
+                    )
+                )
+            )
         );
 
-        Vault vault = new Vault();
-        vault.initialize();
-
-        factoryStorage = new IndexFactoryStorage();
-        factoryStorage.initialize(
-            payable(address(indexToken)),
-            address(oracle),
-            jobId,
-            address(ethPriceOracle),
-            //swap addresses
-            wethAddress,
-            QUOTER,
-            router,
-            factoryAddress,
-            router,
-            factoryAddress
+        
+        Vault vaultImpl = new Vault();
+        Vault vault = Vault(
+            payable(
+                address(
+                    new ERC1967Proxy(
+                        address(vaultImpl),
+                        abi.encodeCall(Vault.initialize, ())
+                    )
+                )
+            )
         );
 
-        // IndexFactory factory = new IndexFactory();
-        // factory.initialize(
-        //    payable(address(factoryStorage))
-        // );
+        
 
+        IndexFactoryStorage factoryStorageImpl = new IndexFactoryStorage();
+        IndexFactoryStorage factoryStorage = IndexFactoryStorage(
+            payable(
+                address(
+                    new ERC1967Proxy(
+                        address(factoryStorageImpl),
+                        abi.encodeCall(
+                            IndexFactoryStorage.initialize,
+                            (
+                            payable(address(indexToken)),
+                            address(oracle),
+                            jobId,
+                            address(ethPriceOracle),
+                            //swap addresses
+                            wethAddress,
+                            QUOTER,
+                            router,
+                            factoryAddress,
+                            router,
+                            factoryAddress
+                            )
+                        )
+                    )
+                )
+            )
+        );
+
+
+        
+
+        return (
+            link,
+            oracle,
+            indexToken,
+            ethPriceOracle,
+            factoryStorage,
+            vault
+        );
+    }
+
+    function deployContracts2() public returns (IndexFactory, IndexFactoryBalancer) {
+        
         IndexFactory factoryImpl = new IndexFactory();
         IndexFactory factory = IndexFactory(
             payable(
@@ -217,36 +236,35 @@ contract ContractDeployer is
             )
         );
 
+        IndexFactoryBalancer factoryBalancerImpl = new IndexFactoryBalancer();
+        IndexFactoryBalancer factoryBalancer = IndexFactoryBalancer(
+            payable(
+                address(
+                    new ERC1967Proxy(
+                        address(factoryBalancerImpl),
+                        abi.encodeCall(
+                            IndexFactoryBalancer.initialize,
+                            payable(address(factoryStorage))
+                        )
+                    )
+                )
+            )
+        );
+
+        
+
+
+        return (factory, factoryBalancer);
+    }
+
+    function linkAllContracts() public {
         indexToken.setMinter(address(factory));
         factoryStorage.setFeeReceiver(address(feeReceiver));
         factoryStorage.setPriceOracle(priceOracleAddress);
         factoryStorage.setVault(address(vault));
         vault.setOperator(address(factory), true);
-
-        // TestSwap testSwap = new TestSwap();
-
-        return (
-            link,
-            oracle,
-            indexToken,
-            ethPriceOracle,
-            factory,
-            factoryStorage,
-            vault
-            // testSwap
-        );
-    }
-
-    function deployContracts2() public returns (IndexFactoryBalancer) {
-        IndexFactoryBalancer factoryBalancer = new IndexFactoryBalancer();
-        factoryBalancer.initialize(payable(address(factoryStorage)));
-
         factoryStorage.setFactoryBalancer(address(factoryBalancer));
         vault.setOperator(address(factoryBalancer), true);
-
-        // TestSwap testSwap = new TestSwap();
-
-        return (factoryBalancer);
     }
 
     function deployTokens(
@@ -282,7 +300,7 @@ contract ContractDeployer is
                 0x5FC8d32690cc91D4c39d9d3abcBD16989F875707
             )
         );
-        // bytes memory bytecodeWithArgs = abi.encodePacked(bytecode, abi.encode(_initData));
+
         return (
             priceOracleAddress,
             factoryAddress,
@@ -321,11 +339,12 @@ contract ContractDeployer is
             oracle,
             indexToken,
             ethPriceOracle,
-            factory,
+            // factory,
             factoryStorage,
             vault
         ) = deployContracts();
-        (factoryBalancer) = deployContracts2();
+        (factory, factoryBalancer) = deployContracts2();
+        linkAllContracts();
     }
 
     function deployByteCode(bytes memory bytecode) public returns (address) {

@@ -36,6 +36,11 @@ contract IndexFactoryBalancer is ContextUpgradeable, ProposableOwnableUpgradeabl
         factoryStorage = IndexFactoryStorage(_factoryStorage);
     }
 
+    /// @custom:oz-upgrades-unsafe-allow constructor
+    constructor() {
+        _disableInitializers();
+    }
+
     /**
      * @dev Converts an amount to Wei based on the given decimals.
      * @param _amount The amount to convert.
