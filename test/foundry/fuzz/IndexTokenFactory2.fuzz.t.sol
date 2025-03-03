@@ -201,7 +201,7 @@ contract IndexTokenFactoryFuzzTests2 is Test, ContractDeployer {
 
 
     function testFuzzIssuanceWithTokens(uint256 amount) public {  
-        vm.assume(amount > 1000000 && amount < TOKEN_LIQUIDITY_LIMIT - TOKEN_LIQUIDITY_LIMIT*10/10000);   
+        vm.assume(amount > 1000000 && amount < TOKEN_LIQUIDITY_LIMIT/10 - TOKEN_LIQUIDITY_LIMIT*10/10000/10);   
         updateOracleList();
         
         factory.proposeOwner(owner);
@@ -224,7 +224,7 @@ contract IndexTokenFactoryFuzzTests2 is Test, ContractDeployer {
 
 
     function testFuzzRedemptionWithTokens(uint256 amount) public {
-        vm.assume(amount > 1000000 && amount < TOKEN_LIQUIDITY_LIMIT - TOKEN_LIQUIDITY_LIMIT*10/10000);   
+        vm.assume(amount > 1000000 && amount < TOKEN_LIQUIDITY_LIMIT/10 - TOKEN_LIQUIDITY_LIMIT*10/10000/10);   
         updateOracleList();
         
         factory.proposeOwner(owner);

@@ -29,6 +29,7 @@ library SwapHelpers {
         address[] memory path,
         uint24[] memory fees,
         uint256 amountIn,
+        uint256 amountOutMinimum,
         address recipient
     ) internal returns (uint256 amountOut) {
         IERC20(path[0]).approve(address(uniswapRouter), amountIn);
@@ -37,7 +38,7 @@ library SwapHelpers {
             recipient: recipient,
             deadline: block.timestamp + 300,
             amountIn:  amountIn,
-            amountOutMinimum: 0
+            amountOutMinimum: amountOutMinimum
         });
         amountOut = uniswapRouter.exactInput(params);
     }
@@ -46,13 +47,14 @@ library SwapHelpers {
         IUniswapV2Router02 uniswapRouter,
         address[] memory path,
         uint256 amountIn,
+        uint256 amountOutMin,
         address recipient
     ) internal returns (uint amountOut) {
         uint[] memory v2AmountOut = uniswapRouter.getAmountsOut(amountIn, path);
         IERC20(path[0]).approve(address(uniswapRouter), amountIn);
-        uniswapRouter.swapExactTokensForTokensSupportingFeeOnTransferTokens(
+        uniswapRouter.swapExactTokensForTokens(
             amountIn, //amountIn
-            0, //amountOutMin
+            amountOutMin, //amountOutMin
             path, //path
             recipient, //to
             block.timestamp //deadline
@@ -66,12 +68,13 @@ library SwapHelpers {
         address[] memory path,
         uint24[] memory fees,
         uint256 amountIn,
+        uint256 amountOutMinimum,
         address recipient
     ) internal returns (uint256 amountOut) {
         if (fees.length > 0) {
-            amountOut = swapVersion3(uniswapRouter, path, fees, amountIn, recipient);
+            amountOut = swapVersion3(uniswapRouter, path, fees, amountIn, amountOutMinimum, recipient);
         } else {
-            amountOut = swapTokensV2(uniswapRouterV2, path, amountIn, recipient);
+            amountOut = swapTokensV2(uniswapRouterV2, path, amountIn, amountOutMinimum, recipient);
         }
     }
 

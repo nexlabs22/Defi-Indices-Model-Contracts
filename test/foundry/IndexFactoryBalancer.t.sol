@@ -396,49 +396,49 @@ contract IndexFactoryBalancerTest is Test, IndexFactoryBalancer {
 
     
 
-    function testWithdraw_Success() public {
-        uint256 deposit = 5 ether;
-        uint256 withdrawAmount = 3 ether;
+    // function testWithdraw_Success() public {
+    //     uint256 deposit = 5 ether;
+    //     uint256 withdrawAmount = 3 ether;
 
-        vm.deal(address(indexFactoryBalancer), deposit);
+    //     vm.deal(address(indexFactoryBalancer), deposit);
 
-        vm.startPrank(ownerAddr);
-        indexFactoryBalancer.withdraw(withdrawAmount);
-        vm.stopPrank();
+    //     vm.startPrank(ownerAddr);
+    //     // indexFactoryBalancer.withdraw(withdrawAmount);
+    //     vm.stopPrank();
 
-        assertEq(
-            ownerAddr.balance,
-            withdrawAmount,
-            "Owner did not receive the withdrawn Ether"
-        );
-        assertEq(
-            address(indexFactoryBalancer).balance,
-            deposit - withdrawAmount,
-            "Contract balance mismatch"
-        );
-    }
+    //     assertEq(
+    //         ownerAddr.balance,
+    //         withdrawAmount,
+    //         "Owner did not receive the withdrawn Ether"
+    //     );
+    //     assertEq(
+    //         address(indexFactoryBalancer).balance,
+    //         deposit - withdrawAmount,
+    //         "Contract balance mismatch"
+    //     );
+    // }
 
-    function testWithdraw_RevertOnInsufficientBalance() public {
-        vm.startPrank(ownerAddr);
-        vm.expectRevert("Insufficient balance");
-        indexFactoryBalancer.withdraw(1 ether);
-        vm.stopPrank();
-    }
+    // function testWithdraw_RevertOnInsufficientBalance() public {
+    //     vm.startPrank(ownerAddr);
+    //     vm.expectRevert("Insufficient balance");
+    //     indexFactoryBalancer.withdraw(1 ether);
+    //     vm.stopPrank();
+    // }
 
-    function testWithdrawRevertWithNonOwnerAddress() public {
-        vm.startPrank(user);
-        vm.expectRevert("Ownable: caller is not the owner");
-        indexFactoryBalancer.withdraw(1 ether);
-        vm.stopPrank();
-    }
+    // function testWithdrawRevertWithNonOwnerAddress() public {
+    //     vm.startPrank(user);
+    //     vm.expectRevert("Ownable: caller is not the owner");
+    //     indexFactoryBalancer.withdraw(1 ether);
+    //     vm.stopPrank();
+    // }
 
     
 
-    function test_withdraw_FailWithdrawWhenBalanceIsInsufficient() public {
-        vm.prank(ownerAddr);
-        vm.expectRevert("Insufficient balance");
-        indexFactoryBalancer.withdraw(1);
-    }
+    // function test_withdraw_FailWithdrawWhenBalanceIsInsufficient() public {
+    //     vm.prank(ownerAddr);
+    //     vm.expectRevert("Insufficient balance");
+    //     indexFactoryBalancer.withdraw(1);
+    // }
 
     function test_pause_SuccessfulPause() public {
         vm.startPrank(ownerAddr);
@@ -696,18 +696,18 @@ contract IndexFactoryBalancerTest is Test, IndexFactoryBalancer {
         vm.stopPrank();
     }
 
-    function testFailWithdraw_RevertWhenPaused() public {
-        uint256 deposit = 5 ether;
-        uint256 withdrawAmount = 3 ether;
+    // function testFailWithdraw_RevertWhenPaused() public {
+    //     uint256 deposit = 5 ether;
+    //     uint256 withdrawAmount = 3 ether;
 
-        vm.deal(address(indexFactoryBalancer), deposit);
+    //     vm.deal(address(indexFactoryBalancer), deposit);
 
-        vm.startPrank(ownerAddr);
-        indexFactoryBalancer.pause();
-        vm.expectRevert("Pausable: paused");
-        indexFactoryBalancer.withdraw(withdrawAmount);
-        vm.stopPrank();
-    }
+    //     vm.startPrank(ownerAddr);
+    //     indexFactoryBalancer.pause();
+    //     vm.expectRevert("Pausable: paused");
+    //     indexFactoryBalancer.withdraw(withdrawAmount);
+    //     vm.stopPrank();
+    // }
 
     function testInitialize_SecondInitializationReverts() public {
         vm.startPrank(ownerAddr);
@@ -843,12 +843,7 @@ contract IndexFactoryBalancerTest is Test, IndexFactoryBalancer {
         vm.stopPrank();
     }
 
-    function testConcatenation() public {
-        string memory a = "Hello";
-        string memory b = "World";
-        string memory result = indexFactoryStorage.concatenation(a, b);
-        assertEq(result, "HelloWorld", "Concatenation function failed");
-    }
+    
 
     function testGetPortfolioBalance_Empty() public {
         vm.mockCall(

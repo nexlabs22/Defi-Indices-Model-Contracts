@@ -464,12 +464,7 @@ contract IndexFactoryStorageTest is Test, IndexFactoryStorage {
         indexFactoryStorage.setFeeRate(50);
     }
 
-    function test_concatenation_SuccessfulConcatenation() public {
-        string memory a = "Hello, ";
-        string memory b = "World!";
-        string memory result = indexFactoryStorage.concatenation(a, b);
-        assertEq(result, "Hello, World!");
-    }
+    
 
     // function test_mockFillAssetsList_SuccessfulFill() public {
     //     vm.prank(indexFactoryStorage.owner());

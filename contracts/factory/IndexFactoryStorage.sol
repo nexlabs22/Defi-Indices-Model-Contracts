@@ -79,6 +79,9 @@ contract IndexFactoryStorage is
     IQuoter public quoter;
     Vault public vault;
 
+    //slipage tolerance
+    uint256 public slippageTolerance; // 2000/10000 = 20%
+
     event FeeReceiverSet(address indexed feeReceiver);
     event VaultSet(address indexed vault);
 
@@ -145,6 +148,7 @@ contract IndexFactoryStorage is
         factoryV2 = IUniswapV2Factory(_factoryV2);
 
         feeRate = 10;
+        slippageTolerance = 2000; // 20%
         latestFeeUpdate = block.timestamp;
 
         baseUrl = "https://app.nexlabs.io/api/allFundingRates";
@@ -300,21 +304,12 @@ contract IndexFactoryStorage is
     //Notice: newFee should be between 1 to 100 (0.01% - 1%)
     function setFeeRate(uint8 _newFee) public onlyOwner {
         uint256 distance = block.timestamp - latestFeeUpdate;
-        require(distance / 60 / 60 > 12, "You should wait at least 12 hours after the latest update");
+        require(distance / 60 / 60 >= 12, "You should wait at least 12 hours after the latest update");
         require(_newFee <= 100 && _newFee >= 1, "The newFee should be between 1 and 100 (0.01% - 1%)");
         feeRate = _newFee;
         latestFeeUpdate = block.timestamp;
     }
 
-    /**
-     * @dev Concatenates two strings.
-     * @param a The first string.
-     * @param b The second string.
-     * @return The concatenated string.
-     */
-    function concatenation(string memory a, string memory b) public pure returns (string memory) {
-        return string(bytes.concat(bytes(a), bytes(b)));
-    }
 
     /**
      * @dev Sets the base URL and URL parameters.
@@ -491,6 +486,19 @@ contract IndexFactoryStorage is
             }
         }
         return finalAmountOut;
+    }
+
+    /**
+     * @dev Gets the minimum amount out.
+     * @return The minimum amount out.
+     */
+    function getMinAmountOut(address[] memory path, uint24[] memory fees, uint256 amountIn) public view returns (uint256) {
+        uint amountOut = getAmountOut(path, fees, amountIn);
+        return (amountOut * (10000 - slippageTolerance)) / 10000;
+        // uint minPercentage = 10000 - slippageTolerance;
+        // return (amountOut * minPercentage) / 10000;
+        // return (amountOut * 8000) / 10000;
+        // return (amountOut*8)/10;
     }
 
     function getIndexTokenPrice() public view returns (uint256) {
