@@ -162,6 +162,10 @@ contract IndexFactoryStorage is
         _disableInitializers();
     }
 
+    function setSlippageTolerance(uint256 _slippageTolerance) public onlyOwner {
+        slippageTolerance = _slippageTolerance;
+    }
+
     function setFactory(address _factoryAddress) public onlyOwner {
         factoryAddress = _factoryAddress;
     }
@@ -415,38 +419,7 @@ contract IndexFactoryStorage is
         return input;
     }
 
-    /**
-     * @dev Mock function to fill the asset list for testing purposes.
-     * @param _tokens The list of token addresses.
-     * @param _pathBytes The list of path bytes.
-     * @param _marketShares The list of market shares.
-     */
-    function mockFillAssetsList(address[] memory _tokens, bytes[] memory _pathBytes, uint256[] memory _marketShares)
-        public
-        onlyOwner
-    {
-        address[] memory tokens0 = _tokens;
-        uint256[] memory marketShares0 = _marketShares;
-
-        //save mappings
-        for (uint256 i = 0; i < tokens0.length; i++) {
-            oracleList[i] = tokens0[i];
-            tokenOracleListIndex[tokens0[i]] = i;
-            tokenOracleMarketShare[tokens0[i]] = marketShares0[i];
-            //update path
-            _initPathData(tokens0[i], _pathBytes[i]);
-            if (totalCurrentList == 0) {
-                currentList[i] = tokens0[i];
-                tokenCurrentMarketShare[tokens0[i]] = marketShares0[i];
-                tokenCurrentListIndex[tokens0[i]] = i;
-            }
-        }
-        totalOracleList = tokens0.length;
-        if (totalCurrentList == 0) {
-            totalCurrentList = tokens0.length;
-        }
-        lastUpdateTime = block.timestamp;
-    }
+    
 
     function getFromETHPathData(address _tokenAddress) public view returns (address[] memory, uint24[] memory) {
         return (fromETHPath[_tokenAddress], fromETHFees[_tokenAddress]);
@@ -495,10 +468,6 @@ contract IndexFactoryStorage is
     function getMinAmountOut(address[] memory path, uint24[] memory fees, uint256 amountIn) public view returns (uint256) {
         uint amountOut = getAmountOut(path, fees, amountIn);
         return (amountOut * (10000 - slippageTolerance)) / 10000;
-        // uint minPercentage = 10000 - slippageTolerance;
-        // return (amountOut * minPercentage) / 10000;
-        // return (amountOut * 8000) / 10000;
-        // return (amountOut*8)/10;
     }
 
     function getIndexTokenPrice() public view returns (uint256) {
