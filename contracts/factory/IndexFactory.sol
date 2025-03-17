@@ -10,6 +10,8 @@ import "@uniswap/v3-core/contracts/interfaces/IUniswapV3Factory.sol";
 import "@uniswap/v3-periphery/contracts/libraries/TransferHelper.sol";
 import "@uniswap/v3-periphery/contracts/interfaces/IQuoter.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+
 import "../interfaces/IWETH.sol";
 import "../interfaces/IUniswapV2Router02.sol";
 import "../interfaces/IUniswapV2Factory.sol";
@@ -29,6 +31,7 @@ contract IndexFactory is
     PausableUpgradeable,
     ReentrancyGuardUpgradeable
 {
+    using SafeERC20 for IERC20;
     IndexFactoryStorage public factoryStorage;
 
     event Issuanced(
@@ -74,7 +77,7 @@ contract IndexFactory is
      * @notice Prevents users from sending ether directly to the contract by reverting the transaction.
      */
     receive() external payable {
-        // revert DoNotSendFundsDirectlyToTheContract();
+        
     }
 
     /**
@@ -219,15 +222,13 @@ contract IndexFactory is
         uint256 feeAmount = (_amountIn * feeRate) / 10000;
 
         uint256 firstPortfolioValue = factoryStorage.getPortfolioBalance();
-
-        require(
-            IERC20(_tokenIn).transferFrom(
-                msg.sender,
-                address(this),
-                _amountIn + feeAmount
-            ),
-            "Token transfer failed"
+        
+        IERC20(_tokenIn).safeTransferFrom(
+            msg.sender,
+            address(this),
+            _amountIn + feeAmount
         );
+        
         uint256 wethAmountBeforFee = swap(
             _tokenInPath,
             _tokenInFees,

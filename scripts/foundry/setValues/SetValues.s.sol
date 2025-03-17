@@ -88,7 +88,7 @@ contract SetValues is Script {
             pathData[i] = abi.encode(path, feesData);
         }
 
-        IndexFactoryStorage(indexFactoryStorageProxy).mockFillAssetsList(assetList, pathData, marketShares);
+        // IndexFactoryStorage(indexFactoryStorageProxy).mockFillAssetsList(assetList, pathData, marketShares);
 
         console.log("Called mockFillAssetsList() with your 5 assets data.");
     }
