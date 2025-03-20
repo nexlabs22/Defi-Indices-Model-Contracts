@@ -72,10 +72,7 @@ contract IndexFactory is
         _disableInitializers();
     }
 
-    /**
-     * @dev The contract's fallback function that does not allow direct payments to the contract.
-     * @notice Prevents users from sending ether directly to the contract by reverting the transaction.
-     */
+    
     receive() external payable {
         
     }
