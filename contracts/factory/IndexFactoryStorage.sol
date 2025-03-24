@@ -79,6 +79,9 @@ contract IndexFactoryStorage is
     IQuoter public quoter;
     Vault public vault;
 
+    //slipage tolerance
+    uint256 public slippageTolerance; // 2000/10000 = 20%
+
     event FeeReceiverSet(address indexed feeReceiver);
     event VaultSet(address indexed vault);
 
@@ -145,12 +148,22 @@ contract IndexFactoryStorage is
         factoryV2 = IUniswapV2Factory(_factoryV2);
 
         feeRate = 10;
+        slippageTolerance = 2000; // 20%
         latestFeeUpdate = block.timestamp;
 
         baseUrl = "https://app.nexlabs.io/api/allFundingRates";
         urlParams = "?multiplyFunc=18&timesNegFund=true&arrays=true";
         // s_requestCount = 1;
         feeReceiver = msg.sender;
+    }
+
+    /// @custom:oz-upgrades-unsafe-allow constructor
+    constructor() {
+        _disableInitializers();
+    }
+
+    function setSlippageTolerance(uint256 _slippageTolerance) public onlyOwner {
+        slippageTolerance = _slippageTolerance;
     }
 
     function setFactory(address _factoryAddress) public onlyOwner {
@@ -273,7 +286,16 @@ contract IndexFactoryStorage is
      * @return The price in Wei.
      */
     function priceInWei() public view returns (uint256) {
-        (, int256 price,,,) = toUsdPriceFeed.latestRoundData();
+        // (, int256 price,,,) = toUsdPriceFeed.latestRoundData();
+        // uint8 priceFeedDecimals = toUsdPriceFeed.decimals();
+        // price = _toWei(price, priceFeedDecimals, 18);
+        // return uint256(price);
+        (uint80 roundId,int price,,uint256 _updatedAt,) = toUsdPriceFeed.latestRoundData();
+        require(roundId != 0, "invalid round id");
+        require(_updatedAt != 0 && _updatedAt <= block.timestamp, "invalid updated time");
+        require(price > 0, "invalid price");
+        require(block.timestamp - _updatedAt < 1 days, "invalid updated time");
+
         uint8 priceFeedDecimals = toUsdPriceFeed.decimals();
         price = _toWei(price, priceFeedDecimals, 18);
         return uint256(price);
@@ -286,21 +308,12 @@ contract IndexFactoryStorage is
     //Notice: newFee should be between 1 to 100 (0.01% - 1%)
     function setFeeRate(uint8 _newFee) public onlyOwner {
         uint256 distance = block.timestamp - latestFeeUpdate;
-        require(distance / 60 / 60 > 12, "You should wait at least 12 hours after the latest update");
+        require(distance / 60 / 60 >= 12, "You should wait at least 12 hours after the latest update");
         require(_newFee <= 100 && _newFee >= 1, "The newFee should be between 1 and 100 (0.01% - 1%)");
         feeRate = _newFee;
         latestFeeUpdate = block.timestamp;
     }
 
-    /**
-     * @dev Concatenates two strings.
-     * @param a The first string.
-     * @param b The second string.
-     * @return The concatenated string.
-     */
-    function concatenation(string memory a, string memory b) public pure returns (string memory) {
-        return string(bytes.concat(bytes(a), bytes(b)));
-    }
 
     /**
      * @dev Sets the base URL and URL parameters.
@@ -406,38 +419,7 @@ contract IndexFactoryStorage is
         return input;
     }
 
-    /**
-     * @dev Mock function to fill the asset list for testing purposes.
-     * @param _tokens The list of token addresses.
-     * @param _pathBytes The list of path bytes.
-     * @param _marketShares The list of market shares.
-     */
-    function mockFillAssetsList(address[] memory _tokens, bytes[] memory _pathBytes, uint256[] memory _marketShares)
-        public
-        onlyOwner
-    {
-        address[] memory tokens0 = _tokens;
-        uint256[] memory marketShares0 = _marketShares;
-
-        //save mappings
-        for (uint256 i = 0; i < tokens0.length; i++) {
-            oracleList[i] = tokens0[i];
-            tokenOracleListIndex[tokens0[i]] = i;
-            tokenOracleMarketShare[tokens0[i]] = marketShares0[i];
-            //update path
-            _initPathData(tokens0[i], _pathBytes[i]);
-            if (totalCurrentList == 0) {
-                currentList[i] = tokens0[i];
-                tokenCurrentMarketShare[tokens0[i]] = marketShares0[i];
-                tokenCurrentListIndex[tokens0[i]] = i;
-            }
-        }
-        totalOracleList = tokens0.length;
-        if (totalCurrentList == 0) {
-            totalCurrentList = tokens0.length;
-        }
-        lastUpdateTime = block.timestamp;
-    }
+    
 
     function getFromETHPathData(address _tokenAddress) public view returns (address[] memory, uint24[] memory) {
         return (fromETHPath[_tokenAddress], fromETHFees[_tokenAddress]);
@@ -477,6 +459,15 @@ contract IndexFactoryStorage is
             }
         }
         return finalAmountOut;
+    }
+
+    /**
+     * @dev Gets the minimum amount out.
+     * @return The minimum amount out.
+     */
+    function getMinAmountOut(address[] memory path, uint24[] memory fees, uint256 amountIn) public view returns (uint256) {
+        uint amountOut = getAmountOut(path, fees, amountIn);
+        return (amountOut * (10000 - slippageTolerance)) / 10000;
     }
 
     function getIndexTokenPrice() public view returns (uint256) {
