@@ -29,6 +29,16 @@ contract IndexFactoryBalancer is
 {
     IndexFactoryStorage public factoryStorage;
 
+    event Rebalanced(uint indexed time);
+
+    modifier onlyOwnerOrOperator() {
+        require(
+            _msgSender() == owner() || factoryStorage.isOperator(_msgSender()),
+            "Caller is not owner or operator"
+        );
+        _;
+    }
+
     /**
      * @dev Initializes the contract with the given parameters.
      * @param _factoryStorage The address of the Uniswap V2 factory.
@@ -129,7 +139,7 @@ contract IndexFactoryBalancer is
     /**
      * @dev Reindexes and reweights the portfolio.
      */
-    function reIndexAndReweight() public onlyOwner {
+    function reIndexAndReweight() public onlyOwnerOrOperator {
         IWETH weth = factoryStorage.weth();
         Vault vault = factoryStorage.vault();
         uint256 totalCurrentList = factoryStorage.totalCurrentList();
@@ -180,5 +190,6 @@ contract IndexFactoryBalancer is
         }
         //update current list
         factoryStorage.updateCurrentList();
+        emit Rebalanced(block.timestamp);
     }
 }
