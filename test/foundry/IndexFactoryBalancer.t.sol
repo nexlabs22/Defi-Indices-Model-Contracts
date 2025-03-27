@@ -100,6 +100,7 @@ contract IndexFactoryBalancerTest is Test, IndexFactoryBalancer {
         assertTrue(address(indexFactoryStorage) != address(0));
 
         indexFactoryStorage.setFactoryBalancer(address(indexFactoryBalancer));
+        indexFactoryStorage.setOperator(address(this), true);
 
         factoryStorageAddress = address(indexFactoryStorage);
 
@@ -630,7 +631,7 @@ contract IndexFactoryBalancerTest is Test, IndexFactoryBalancer {
             abi.encode(wethBalanceBefore)
         );
 
-        vm.expectRevert("Ownable: caller is not the owner");
+        vm.expectRevert("Caller is not owner or operator");
         indexFactoryBalancer.reIndexAndReweight();
 
         uint256 wethBalanceAfter = wethBalanceBefore;

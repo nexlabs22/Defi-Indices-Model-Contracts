@@ -84,6 +84,10 @@ contract IndexFactoryStorage is
 
     event FeeReceiverSet(address indexed feeReceiver);
     event VaultSet(address indexed vault);
+    event RequestFulfilled(bytes32 indexed id, uint indexed time);
+    event PathDataUpdated(uint indexed time);
+
+    mapping(address => bool) public isOperator;
 
     /**
      * @dev Throws if the caller is not a factory contract.
@@ -92,6 +96,11 @@ contract IndexFactoryStorage is
         require(
             msg.sender == factoryAddress || msg.sender == factoryBalancerAddress, "Caller is not a factory contract"
         );
+        _;
+    }
+
+    modifier onlyOwnerOrOperator() {
+        require(msg.sender == owner() || isOperator[msg.sender], "Caller is not the owner or operator");
         _;
     }
 
@@ -160,6 +169,11 @@ contract IndexFactoryStorage is
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() {
         _disableInitializers();
+    }
+
+    // set operator
+    function setOperator(address _operator, bool _status) public onlyOwner {
+        isOperator[_operator] = _status;
     }
 
     function setSlippageTolerance(uint256 _slippageTolerance) public onlyOwner {
@@ -327,22 +341,11 @@ contract IndexFactoryStorage is
 
     function requestAssetsData(
         string calldata source,
-        bytes calldata encryptedSecretsReference,
-        string[] calldata args,
-        bytes[] calldata bytesArgs,
         uint64 subscriptionId,
         uint32 callbackGasLimit
-    ) public returns (bytes32) {
+    ) public onlyOwnerOrOperator returns (bytes32) {
         FunctionsRequest.Request memory req;
-        req.initializeRequest(FunctionsRequest.Location.Inline, FunctionsRequest.CodeLanguage.JavaScript, source);
-        req.secretsLocation = FunctionsRequest.Location.Remote;
-        req.encryptedSecretsReference = encryptedSecretsReference;
-        if (args.length > 0) {
-            req.setArgs(args);
-        }
-        if (bytesArgs.length > 0) {
-            req.setBytesArgs(bytesArgs);
-        }
+        req.initializeRequestForInlineJavaScript(source);
         return _sendRequest(req.encodeCBOR(), subscriptionId, callbackGasLimit, donId);
     }
 
@@ -354,23 +357,23 @@ contract IndexFactoryStorage is
      * Either response or error parameter will be set, but never both
      */
     function fulfillRequest(bytes32 requestId, bytes memory response, bytes memory err) internal override {
-        (address[] memory _tokens, bytes[] memory _pathBytes, uint256[] memory _marketShares) =
-            abi.decode(response, (address[], bytes[], uint256[]));
+        (address[] memory _tokens, uint256[] memory _marketShares) =
+            abi.decode(response, (address[], uint256[]));
         require(
-            _tokens.length == _marketShares.length && _marketShares.length == _pathBytes.length,
+            _tokens.length == _marketShares.length,
             "The length of the arrays should be the same"
         );
-        _initData(_tokens, _pathBytes, _marketShares);
+        _initData(_tokens, _marketShares);
+        emit RequestFulfilled(requestId, block.timestamp);
     }
 
-    function _initData(address[] memory tokens0, bytes[] memory pathBytes0, uint256[] memory marketShares0) internal {
+    function _initData(address[] memory tokens0, uint256[] memory marketShares0) internal {
         //save mappings
         for (uint256 i = 0; i < tokens0.length; i++) {
             oracleList[i] = tokens0[i];
             tokenOracleListIndex[tokens0[i]] = i;
             tokenOracleMarketShare[tokens0[i]] = marketShares0[i];
-            //update path
-            _initPathData(tokens0[i], pathBytes0[i]);
+        
             if (totalCurrentList == 0) {
                 currentList[i] = tokens0[i];
                 tokenCurrentMarketShare[tokens0[i]] = marketShares0[i];
@@ -382,6 +385,17 @@ contract IndexFactoryStorage is
             totalCurrentList = tokens0.length;
         }
         lastUpdateTime = block.timestamp;
+    }
+
+    function updatePathData(address[] memory tokens, bytes[] memory pathBytes) public onlyOwnerOrOperator {
+        require(
+            tokens.length == pathBytes.length,
+            "The length of the tokens and pathBytes arrays should be the same"
+        );
+        for(uint256 i = 0; i < tokens.length; i++) {
+            _initPathData(tokens[i], pathBytes[i]);
+        }
+        emit PathDataUpdated(block.timestamp);
     }
 
     function _initPathData(address _tokenAddress, bytes memory _pathBytes) internal {
