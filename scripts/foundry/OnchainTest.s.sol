@@ -11,7 +11,8 @@ contract OnchainTest is Script {
     // Mainnet
     address user = vm.envAddress("USER");
     address weth = vm.envAddress("ARBITRUM_WETH_ADDRESS");
-    address usdt = vm.envAddress("ARBITRUM_USDC_ADDRESS");
+    address usdc = vm.envAddress("ARBITRUM_USDC_ADDRESS");
+    // address usdt = vm.envAddress("ARBITRUM_USDC_ADDRESS");
     address indexFactoryProxy = vm.envAddress("ARBITRUM_INDEX_FACTORY_PROXY_ADDRESS");
     address indexTokenProxy = vm.envAddress("ARBITRUM_INDEX_TOKEN_PROXY_ADDRESS");
 
@@ -28,17 +29,17 @@ contract OnchainTest is Script {
         indexToken = IndexToken(indexTokenProxy);
 
         // Issuance With ETH
-        issuanceAndRedemptionWithEth();
+        // issuanceAndRedemptionWithEth();
 
         // Issuance with ERC20 Token
-        // issuanceAndRedemptionWithUsdt();
+        issuanceAndRedemptionWithUsdt();
 
         vm.stopBroadcast();
     }
 
     function issuanceAndRedemptionWithEth() public {
-        IndexFactory(payable(indexFactoryProxy)).issuanceIndexTokensWithEth{value: (730000000000000 * 1001) / 1000}(
-            730000000000000
+        IndexFactory(payable(indexFactoryProxy)).issuanceIndexTokensWithEth{value: (4400000000000000 * 1001) / 1000}(
+            4400000000000000
         );
         // IndexFactory(payable(indexFactoryProxy)).issuanceIndexTokensWithEth{value: (1e14 * 1001) / 1000}(1e14);
 
@@ -54,24 +55,24 @@ contract OnchainTest is Script {
     }
 
     function issuanceAndRedemptionWithUsdt() public {
-        IERC20(usdt).approve(address(indexFactoryProxy), 1001e18);
+        IERC20(usdc).approve(address(indexFactoryProxy), 10e6 * 1001 / 1000);
 
         address[] memory path0 = new address[](2);
-        path0[0] = usdt;
+        path0[0] = usdc;
         path0[1] = weth;
         uint24[] memory fees0 = new uint24[](1);
         fees0[0] = 3000;
 
-        IndexFactory(payable(indexFactoryProxy)).issuanceIndexTokens(address(usdt), path0, fees0, 100e18);
+        IndexFactory(payable(indexFactoryProxy)).issuanceIndexTokens(address(usdc), path0, fees0, 10e6);
 
-        address[] memory path = new address[](2);
-        path[0] = weth;
-        path[1] = usdt;
-        uint24[] memory fees = new uint24[](1);
-        fees[0] = 3000;
+        // address[] memory path = new address[](2);
+        // path[0] = weth;
+        // path[1] = usdt;
+        // uint24[] memory fees = new uint24[](1);
+        // fees[0] = 3000;
 
-        IndexFactory(payable(indexFactoryProxy)).redemption(
-            indexToken.balanceOf(address(user)), address(weth), path, fees
-        );
+        // IndexFactory(payable(indexFactoryProxy)).redemption(
+        //     indexToken.balanceOf(address(user)), address(weth), path, fees
+        // );
     }
 }
