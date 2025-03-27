@@ -52,6 +52,14 @@ contract IndexFactory is
         uint256 time
     );
 
+    modifier onlyOwnerOrOperator() {
+        require(
+            msg.sender == owner() || factoryStorage.isOperator(msg.sender),
+            "Caller is not owner or operator"
+        );
+        _;
+    }
+
     /**
      * @dev Initializes the contract with the given parameters.
      * @param _factoryStorage The address of the Uniswap V2 factory.
@@ -80,14 +88,14 @@ contract IndexFactory is
     /**
      * @dev Pauses the contract.
      */
-    function pause() external onlyOwner {
+    function pause() external onlyOwnerOrOperator {
         _pause();
     }
 
     /**
      * @dev Unpauses the contract.
      */
-    function unpause() external onlyOwner {
+    function unpause() external onlyOwnerOrOperator {
         _unpause();
     }
 
