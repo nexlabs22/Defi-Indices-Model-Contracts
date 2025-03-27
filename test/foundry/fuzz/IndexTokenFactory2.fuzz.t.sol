@@ -121,15 +121,13 @@ contract IndexTokenFactoryFuzzTests2 is Test, ContractDeployer {
         link.transfer(address(factoryStorage), 1e17);
         bytes32 requestId = factoryStorage.requestAssetsData(
             "console.log('Hello, World!');",
-            // FunctionsConsumer.Location.Inline, // Use the imported enum directly
-            abi.encodePacked("default"),
-            new string[](1), // Convert to dynamic array
-            new bytes[](1),  // Convert to dynamic array
             0,
             0
         );
-        bytes memory data = abi.encode(assetList, pathData, tokenShares);
+        bytes memory data = abi.encode(assetList, tokenShares);
         oracle.fulfillRequest(address(factoryStorage), requestId, data);
+        // updatate path data
+        factoryStorage.updatePathData(assetList, pathData);
     }
 
     function testOracleList() public {
@@ -201,7 +199,7 @@ contract IndexTokenFactoryFuzzTests2 is Test, ContractDeployer {
 
 
     function testFuzzIssuanceWithTokens(uint256 amount) public {  
-        vm.assume(amount > 1000000 && amount < TOKEN_LIQUIDITY_LIMIT - TOKEN_LIQUIDITY_LIMIT*10/10000);   
+        vm.assume(amount > 1000000 && amount < TOKEN_LIQUIDITY_LIMIT/10 - TOKEN_LIQUIDITY_LIMIT*10/10000/10);   
         updateOracleList();
         
         factory.proposeOwner(owner);
@@ -224,7 +222,7 @@ contract IndexTokenFactoryFuzzTests2 is Test, ContractDeployer {
 
 
     function testFuzzRedemptionWithTokens(uint256 amount) public {
-        vm.assume(amount > 1000000 && amount < TOKEN_LIQUIDITY_LIMIT - TOKEN_LIQUIDITY_LIMIT*10/10000);   
+        vm.assume(amount > 1000000 && amount < TOKEN_LIQUIDITY_LIMIT/10 - TOKEN_LIQUIDITY_LIMIT*10/10000/10);   
         updateOracleList();
         
         factory.proposeOwner(owner);

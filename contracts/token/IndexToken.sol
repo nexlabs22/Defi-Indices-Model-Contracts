@@ -100,6 +100,11 @@ contract IndexToken is ContextUpgradeable, ERC20Upgradeable, ProposableOwnableUp
         feeTimestamp = block.timestamp;
     }
 
+    /// @custom:oz-upgrades-unsafe-allow constructor
+    constructor() {
+        _disableInitializers();
+    }
+
     /// @notice External mint function
     /// @dev Mint function can only be called externally by the controller
     /// @param to address
@@ -157,14 +162,26 @@ contract IndexToken is ContextUpgradeable, ERC20Upgradeable, ProposableOwnableUp
             uint256 supply = initial;
             uint256 _feeRate = feeRatePerDayScaled;
 
-            for (uint256 i; i < _days;) {
-                supply += ((supply * _feeRate) / SCALAR);
-                unchecked {
-                    ++i;
-                }
-            }
+            // for (uint256 i; i < _days;) {
+            //     supply += ((supply * _feeRate) / SCALAR);
+            //     unchecked {
+            //         ++i;
+            //     }
+            // }
+
+            // Use a logarithmic approximation for compounding
+            uint256 compoundedFeeRate = SCALAR + (_feeRate * _days);
+            // Calculate the compounded supply
+            supply = (supply * compoundedFeeRate) / SCALAR;
+            
             uint256 amount = supply - initial;
             feeTimestamp += 1 days * _days;
+
+            require(
+                totalSupply() + amount <= supplyCeiling,
+                "will exceed supply ceiling"
+            );
+
             _mint(feeReceiver, amount);
 
             emit MintFeeToReceiver(feeReceiver, block.timestamp, totalSupply(), amount);
@@ -174,7 +191,7 @@ contract IndexToken is ContextUpgradeable, ERC20Upgradeable, ProposableOwnableUp
     /// @notice Expands supply and mints fees to fee reciever
     /// @dev Can only be called by the owner externally,
     /// @dev _mintToFeeReciver is the internal function and is called after each supply/rate change
-    function mintToFeeReceiver() external onlyOwner {
+    function mintToFeeReceiver() external onlyOwner whenNotPaused {
         _mintToFeeReceiver();
     }
 

@@ -46,17 +46,17 @@ contract CounterTest is Test, ContractDeployer {
     function setUp() public {
         
         deployAllContracts(1000000e18);
-        addLiquidityETH(positionManager, factoryAddress, token0, wethAddress, 1000e18, 1e18);
-        addLiquidityETH(positionManager, factoryAddress, token1, wethAddress, 1000e18, 1e18);
-        addLiquidityETH(positionManager, factoryAddress, token2, wethAddress, 1000e18, 1e18);
-        addLiquidityETH(positionManager, factoryAddress, token3, wethAddress, 1000e18, 1e18);
-        addLiquidityETH(positionManager, factoryAddress, token4, wethAddress, 1000e18, 1e18);
-        addLiquidityETH(positionManager, factoryAddress, token5, wethAddress, 1000e18, 1e18);
-        addLiquidityETH(positionManager, factoryAddress, token6, wethAddress, 1000e18, 1e18);
-        addLiquidityETH(positionManager, factoryAddress, token7, wethAddress, 1000e18, 1e18);
-        addLiquidityETH(positionManager, factoryAddress, token8, wethAddress, 1000e18, 1e18);
-        addLiquidityETH(positionManager, factoryAddress, token9, wethAddress, 1000e18, 1e18);
-        addLiquidityETH(positionManager, factoryAddress, usdt, wethAddress, 1000e18, 1e18);
+        addLiquidityETH(positionManager, factoryAddress, token0, wethAddress, 100000e18, 100e18);
+        addLiquidityETH(positionManager, factoryAddress, token1, wethAddress, 100000e18, 100e18);
+        addLiquidityETH(positionManager, factoryAddress, token2, wethAddress, 100000e18, 100e18);
+        addLiquidityETH(positionManager, factoryAddress, token3, wethAddress, 100000e18, 100e18);
+        addLiquidityETH(positionManager, factoryAddress, token4, wethAddress, 100000e18, 100e18);
+        addLiquidityETH(positionManager, factoryAddress, token5, wethAddress, 100000e18, 100e18);
+        addLiquidityETH(positionManager, factoryAddress, token6, wethAddress, 100000e18, 100e18);
+        addLiquidityETH(positionManager, factoryAddress, token7, wethAddress, 100000e18, 100e18);
+        addLiquidityETH(positionManager, factoryAddress, token8, wethAddress, 100000e18, 100e18);
+        addLiquidityETH(positionManager, factoryAddress, token9, wethAddress, 100000e18, 100e18);
+        addLiquidityETH(positionManager, factoryAddress, usdt, wethAddress, 100000e18, 100e18);
         
     }
 
@@ -165,16 +165,14 @@ contract CounterTest is Test, ContractDeployer {
         link.transfer(address(factoryStorage), 1e17);
         bytes32 requestId = factoryStorage.requestAssetsData(
             "console.log('Hello, World!');",
-            // FunctionsConsumer.Location.Inline, // Use the imported enum directly
-            abi.encodePacked("default"),
-            new string[](1), // Convert to dynamic array
-            new bytes[](1),  // Convert to dynamic array
             0,
             0
         );
         // oracle.fulfillOracleFundingRateRequest(requestId, assetList, tokenShares, swapVersions);
-        bytes memory data = abi.encode(assetList, pathData, tokenShares);
+        bytes memory data = abi.encode(assetList, tokenShares);
         oracle.fulfillRequest(address(factoryStorage), requestId, data);
+        // updatate path data
+        factoryStorage.updatePathData(assetList, pathData);
     }
     function testOracleList() public {
         updateOracleList();

@@ -123,16 +123,14 @@ contract IndexTokenFactoryTest is Test, ContractDeployer {
         link.transfer(address(factoryStorage), 1e17);
         bytes32 requestId = factoryStorage.requestAssetsData(
             "console.log('Hello, World!');",
-            // FunctionsConsumer.Location.Inline, // Use the imported enum directly
-            abi.encodePacked("default"),
-            new string[](1), // Convert to dynamic array
-            new bytes[](1),  // Convert to dynamic array
             0,
             0
         );
-        bytes memory data = abi.encode(assetList, pathData, tokenShares, swapVersions);
+        bytes memory data = abi.encode(assetList, tokenShares, swapVersions);
         bool success = oracle.fulfillRequest(address(factoryStorage), requestId, data);
         require(success, "oracle request failed");
+        // updatate path data
+        factoryStorage.updatePathData(assetList, pathData);
     }
 
 
@@ -187,16 +185,14 @@ contract IndexTokenFactoryTest is Test, ContractDeployer {
         // link.transfer(address(factoryStorage), 1e17);
         bytes32 requestId = factoryStorage.requestAssetsData(
             "console.log('Hello, World!');",
-            // FunctionsConsumer.Location.Inline, // Use the imported enum directly
-            abi.encodePacked("default"),
-            new string[](1), // Convert to dynamic array
-            new bytes[](1),  // Convert to dynamic array
             0,
             0
         );
-        bytes memory data = abi.encode(assetList, pathData, tokenShares);
+        bytes memory data = abi.encode(assetList, tokenShares);
         bool success = oracle.fulfillRequest(address(factoryStorage), requestId, data);
         require(success, "oracle request failed 2");
+        // updatate path data
+        factoryStorage.updatePathData(assetList, pathData);
     }
 
     function testOracleList() public {

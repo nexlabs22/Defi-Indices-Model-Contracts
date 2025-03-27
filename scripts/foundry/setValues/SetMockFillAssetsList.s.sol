@@ -200,7 +200,7 @@ contract SetMockFillAssetsList is Script {
         console.log("Market shares length: ", marketShares.length);
         require(totalShares == 100e18, "Total marketShares must equal 100e18");
 
-        IndexFactoryStorage(indexFactoryStorageProxy).mockFillAssetsList(assetList, pathData, marketShares);
+        // IndexFactoryStorage(indexFactoryStorageProxy).mockFillAssetsList(assetList, pathData, marketShares);
 
         console.log("Called mockFillAssetsList() with your 12 assets data.");
     }
