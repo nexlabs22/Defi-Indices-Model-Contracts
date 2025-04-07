@@ -372,13 +372,13 @@ contract IndexFactory is
         uint256 _totalCurrentList,
         Vault _vault,
         uint256 _burnPercent,
+        uint256 _amountIn,
         address _tokenOut,
         address[] memory _tokenOutPath,
         uint24[] memory _tokenOutFees,
         uint256 feeRate,
         address feeReceiver
     ) internal returns (uint256 realOut) {
-        IndexToken indexToken = factoryStorage.indexToken();
         uint256 outputAmount;
         //swap
         outputAmount = _redemptionSwaps(
@@ -387,7 +387,7 @@ contract IndexFactory is
             _vault
         );
         realOut = _swapToOutputToken(
-            _burnPercent,
+            _amountIn,
             outputAmount,
             _tokenOut,
             _tokenOutPath,
@@ -423,6 +423,7 @@ contract IndexFactory is
             factoryStorage.totalCurrentList(),
             vault,
             burnPercent,
+            amountIn,
             _tokenOut,
             _tokenOutPath,
             _tokenOutFees,
